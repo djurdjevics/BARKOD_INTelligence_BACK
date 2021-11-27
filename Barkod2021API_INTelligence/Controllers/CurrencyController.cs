@@ -14,6 +14,9 @@ namespace Barkod2021API_INTelligence.Controllers
     [Route("[controller]")]
     public class CurrencyController:ControllerBase
     {
+        private const string _ACCESSKEY = "96c7a03cce11e464756d645302fbb324";
+
+
         [HttpGet]
         [Route("/Convert")]
         public async Task<ActionResult> ConvertCurrencies([FromQuery] CurrencyModel currencyModel)
@@ -43,6 +46,21 @@ namespace Barkod2021API_INTelligence.Controllers
             decimal result = model.amount * Decimal.Parse(currencyString);
             result = Math.Round(result, 2);
             return Ok(result.ToString());
+        }
+
+        [HttpGet]
+        [Route("/GetRSDQuotes")]
+        public async Task<ActionResult<string>> GetRSDQuotes([FromQuery] CurrencyModel currencyModel)
+        {
+            HttpClient httpClient = new HttpClient();
+            DateTime dateTime = DateTime.Now;
+            string date = dateTime.Year + "-" + dateTime.Month + "-" + dateTime.Day;
+            string url = "https://api.currencylayer.com/historical?date="+date+"&source="+currencyModel.fromCurr+"&access_key="+_ACCESSKEY;
+            var response = await httpClient.GetAsync(url);
+            var responseString = await response.Content.ReadAsStringAsync();
+            JObject jObject = JObject.Parse(responseString);
+            var quotes = jObject.SelectToken("quotes");
+            return Ok(quotes.ToString());
         }
     }
 }
