@@ -44,5 +44,31 @@ namespace Barkod2021API_INTelligence.Controllers
             result = Math.Round(result, 2);
             return Ok(result.ToString());
         }
+
+        [HttpGet]
+        [Route("/percent")]
+        public async Task<ActionResult<string>> getPercent()
+        {
+            HttpClient httpClient = new HttpClient();
+            String fromCurr = "RSD";
+            DateTime date = DateTime.Now;
+            DateTime dateBefore = date.AddDays(-1);
+            string dateBeforeString = dateBefore.ToString("yyyy-MM-dd");
+            string dateString = date.ToString("yyyy-MM-dd");
+            var response = await httpClient.GetAsync("https://api.currencylayer.com/timeframe?source=" + fromCurr + "&start_date=" + dateBeforeString + "&end_date=" + dateString + "&access_key=96c7a03cce11e464756d645302fbb324");
+            var responseString = await response.Content.ReadAsStringAsync();
+            JObject jObject = JObject.Parse(responseString);
+            var currencies = jObject.SelectToken("quotes");
+            //EUR USD JPY
+            string rsdeur = (Decimal.Parse(currencies.SelectToken(dateString).SelectToken("RSDEUR").ToString()) * 100 / Decimal.Parse(currencies.SelectToken(dateBeforeString).SelectToken("RSDEUR").ToString())).ToString();
+            string rsdusd = (Decimal.Parse(currencies.SelectToken(dateString).SelectToken("RSDUSD").ToString()) * 100 / Decimal.Parse(currencies.SelectToken(dateBeforeString).SelectToken("RSDUSD").ToString())).ToString();
+            string rsdjpy = (Decimal.Parse(currencies.SelectToken(dateString).SelectToken("RSDJPY").ToString()) * 100 / Decimal.Parse(currencies.SelectToken(dateBeforeString).SelectToken("RSDJPY").ToString())).ToString();
+            string result = rsdeur + ";" + rsdusd + ";" + rsdjpy;
+            return Ok(result);
+
+        }
+        
+
+
     }
 }
