@@ -71,6 +71,7 @@ namespace Barkod2021API_INTelligence.Controllers
 
         }
         
+        [HttpGet]
         [Route("/GetRSDQuotes")]
         public async Task<ActionResult<string>> GetRSDQuotes()
         {
@@ -84,5 +85,5 @@ namespace Barkod2021API_INTelligence.Controllers
             var quotes = jObject.SelectToken("quotes");
             return Ok(quotes.ToString());
         }
-        }
+    }
 }
