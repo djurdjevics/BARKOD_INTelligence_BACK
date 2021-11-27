@@ -32,7 +32,7 @@ namespace Barkod2021API_INTelligence.Controllers
             string dateToChange = date.ToString();
             DateTimeOffset dateTimeOffset = DateTimeOffset.Parse(dateToChange);
             long unixTimeStamp = dateTimeOffset.ToUnixTimeMilliseconds();
-            responseModel.result = currencyModel.amount * Decimal.Parse(result.ToString());
+            responseModel.result = decimal.Parse(result.ToString());
             responseModel.result = Math.Round(responseModel.result, 2);
             responseModel.timeStamp = unixTimeStamp;
             return Ok(responseModel);
