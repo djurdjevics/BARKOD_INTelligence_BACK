@@ -80,15 +80,15 @@ namespace Barkod2021API_INTelligence.Controllers
             return Ok(result);
 
         }
-        
+
         [HttpGet]
         [Route("/GetRSDQuotes")]
-        public async Task<ActionResult<string>> GetRSDQuotes()
+        public async Task<ActionResult<string>> GetRSDQuotes([FromQuery] string toCurr)
         {
             HttpClient httpClient = new HttpClient();
             DateTime dateTime = DateTime.Now;
             string date = dateTime.Year + "-" + dateTime.Month + "-" + dateTime.Day;
-            string url = "https://api.currencylayer.com/historical?date="+date+"&source=RSD&access_key="+_ACCESSKEY;
+            string url = "https://api.currencylayer.com/historical?date=" + date + "&source=" + toCurr + "&access_key="+_ACCESSKEY;
             var response = await httpClient.GetAsync(url);
             var responseString = await response.Content.ReadAsStringAsync();
             JObject jObject = JObject.Parse(responseString);
@@ -123,5 +123,6 @@ namespace Barkod2021API_INTelligence.Controllers
             }
             return Ok(result);
         }
+
     }
 }
