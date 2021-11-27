@@ -7,35 +7,89 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Barkod2021API_INTelligence.Logic;
 
 namespace Barkod2021API_INTelligence.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class CurrencyController:ControllerBase
+    public class CurrencyController : ControllerBase
     {
         private const string _ACCESSKEY = "96c7a03cce11e464756d645302fbb324";
-
+        static Dictionary<string, CachingModel> dictCache = new Dictionary<string, CachingModel>()
+        {
+            { "RSDEUR",null},
+            { "RSDUSD",null },
+            { "RSDJPY",null },
+            { "EURRSD",null},
+            { "USDRSD",null},
+            { "JPYRSD",null }
+        };
 
         [HttpGet]
         [Route("/Convert")]
         public async Task<ActionResult> ConvertCurrencies([FromQuery] CurrencyModel currencyModel)
         {
-            HttpClient httpClient = new HttpClient();
-            ConversionResponseModel responseModel = new ConversionResponseModel();
-            string url = "https://api.currencylayer.com/convert?from=" + currencyModel.fromCurr + "&to=" + currencyModel.toCurr + "&amount=" + currencyModel.amount + "&access_key=96c7a03cce11e464756d645302fbb324";
-            var response = await httpClient.GetAsync(url);
-            var responseString = await response.Content.ReadAsStringAsync();
-            JObject jObject = JObject.Parse(responseString);
-            var result = jObject.SelectToken("result");
-            DateTime date = DateTime.Now;
-            string dateToChange = date.ToString();
-            DateTimeOffset dateTimeOffset = DateTimeOffset.Parse(dateToChange);
-            long unixTimeStamp = dateTimeOffset.ToUnixTimeMilliseconds();
-            responseModel.result = decimal.Parse(result.ToString());
-            responseModel.result = Math.Round(responseModel.result, 2);
-            responseModel.timeStamp = unixTimeStamp;
-            return Ok(responseModel);
+            string currencyPair = currencyModel.fromCurr + currencyModel.toCurr;
+            CurrencyService service = new CurrencyService();
+            DateTimeOffset dateTimeOffset1 = DateTimeOffset.UtcNow;
+            long currentTimeStamp = dateTimeOffset1.ToUnixTimeMilliseconds();
+            decimal sum = 0;
+            if (dictCache[currencyPair] != null)
+            {
+                if (service.CheckTimeStamp(currentTimeStamp,dictCache[currencyPair].timestamp) == true)
+                {
+                    ConversionResponseModel conversionResponseModel = new ConversionResponseModel();
+                    sum = currencyModel.amount * decimal.Parse(dictCache[currencyPair].quote);
+                    conversionResponseModel.result = sum;
+                    DateTime date = DateTime.Now;
+                    string dateToChange = date.ToString();
+                    DateTimeOffset dateTimeOffset = DateTimeOffset.Parse(dateToChange);
+                    long unixTimeStamp = dateTimeOffset.ToUnixTimeMilliseconds();
+                    conversionResponseModel.timeStamp = unixTimeStamp;
+                    return Ok(conversionResponseModel);
+                }
+                else
+                {
+                    HttpClient httpClient = new HttpClient();
+                    ConversionResponseModel responseModel = new ConversionResponseModel();
+                    string url = "https://api.currencylayer.com/convert?from=" + currencyModel.fromCurr + "&to=" + currencyModel.toCurr + "&amount=" + currencyModel.amount + "&access_key=96c7a03cce11e464756d645302fbb324";
+                    var response = await httpClient.GetAsync(url);
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    JObject jObject = JObject.Parse(responseString);
+                    var result = jObject.SelectToken("result");
+                    var quote = jObject.SelectToken("info.quote");
+                    DateTime date = DateTime.Now;
+                    string dateToChange = date.ToString();
+                    DateTimeOffset dateTimeOffset = DateTimeOffset.Parse(dateToChange);
+                    long unixTimeStamp = dateTimeOffset.ToUnixTimeMilliseconds();
+                    responseModel.result = decimal.Parse(result.ToString());
+                    responseModel.result = Math.Round(responseModel.result, 2);
+                    responseModel.timeStamp = unixTimeStamp;
+                    return Ok(responseModel);
+                }
+            }
+            else
+            {
+                HttpClient httpClient = new HttpClient();
+                ConversionResponseModel responseModel = new ConversionResponseModel();
+                string url = "https://api.currencylayer.com/convert?from=" + currencyModel.fromCurr + "&to=" + currencyModel.toCurr + "&amount=" + currencyModel.amount + "&access_key=96c7a03cce11e464756d645302fbb324";
+                var response = await httpClient.GetAsync(url);
+                var responseString = await response.Content.ReadAsStringAsync();
+                JObject jObject = JObject.Parse(responseString);
+                var result = jObject.SelectToken("result");
+                var quote = jObject.SelectToken("info.quote");
+                DateTime date = DateTime.Now;
+                string dateToChange = date.ToString();
+                DateTimeOffset dateTimeOffset = DateTimeOffset.Parse(dateToChange);
+                long unixTimeStamp = dateTimeOffset.ToUnixTimeMilliseconds();
+                responseModel.result = decimal.Parse(result.ToString());
+                responseModel.result = Math.Round(responseModel.result, 2);
+                responseModel.timeStamp = unixTimeStamp;
+                dictCache[currencyPair] = new CachingModel { quote = quote.ToString(), timestamp = unixTimeStamp};
+                return Ok(responseModel);
+            }
+            
         }
 
         [HttpGet]

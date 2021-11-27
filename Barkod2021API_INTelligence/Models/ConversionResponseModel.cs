@@ -8,6 +8,6 @@ namespace Barkod2021API_INTelligence.Models
     public class ConversionResponseModel
     {
         public decimal result { get; set; }
-        public long timeStamp { get; set; }
+        public long timeStamp {     get; set; }
     }
 }
