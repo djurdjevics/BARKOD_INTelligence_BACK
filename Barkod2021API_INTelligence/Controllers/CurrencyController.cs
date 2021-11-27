@@ -24,7 +24,9 @@ namespace Barkod2021API_INTelligence.Controllers
             var responseString = await response.Content.ReadAsStringAsync();
             JObject jObject = JObject.Parse(responseString);
             var result = jObject.SelectToken("result");
-            return Ok(result.ToString());
-;        }
+            decimal resultDecimal = Decimal.Parse(result.ToString());
+            resultDecimal = Math.Round(resultDecimal, 2);
+            return Ok(resultDecimal.ToString());
+            ;        }
     }
 }
