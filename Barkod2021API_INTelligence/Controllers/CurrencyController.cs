@@ -10,6 +10,7 @@ namespace Barkod2021API_INTelligence.Controllers
     [Route("[controller]")]
     public class CurrencyController:ControllerBase
     {
-
+        [HttpGet]
+        public async Task<ActionResult<>> get
     }
 }
