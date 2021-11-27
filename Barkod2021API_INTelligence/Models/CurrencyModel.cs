@@ -10,6 +10,6 @@ namespace Barkod2021API_INTelligence.Models
         public string fromCurr { get; set; } = "";
         public string toCurr { get; set; } = "";
         public decimal amount { get; set; } = 0;
-        public DateTime time { get; set; } = new DateTime();
+        public string time { get; set; } = "";
     }
 }
