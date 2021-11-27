@@ -95,5 +95,33 @@ namespace Barkod2021API_INTelligence.Controllers
             var quotes = jObject.SelectToken("quotes");
             return Ok(quotes.ToString());
         }
+
+        [HttpGet]
+        [Route("/getParamsForMonth")]
+        public async Task<ActionResult<string>> getParamsForMonth([FromQuery] string fromCurr)
+        {
+            HttpClient httpClient = new HttpClient();
+            String toCurr = "RSD";
+            DateTime date = DateTime.Now;
+            DateTime dateBefore = date.AddDays(-31);
+            string dateBeforeString = dateBefore.ToString("yyyy-MM-dd");
+            string dateString = date.ToString("yyyy-MM-dd");
+            var response = await httpClient.GetAsync("https://api.currencylayer.com/timeframe?source=" + fromCurr + "&start_date=" + dateBeforeString + "&end_date=" + dateString + "&access_key=96c7a03cce11e464756d645302fbb324");
+            var responseString = await response.Content.ReadAsStringAsync();
+            JObject jObject = JObject.Parse(responseString);
+            var currencies = jObject.SelectToken("quotes");
+            List<DateCurrencyModel> result = new List<DateCurrencyModel>();
+            for(int i = 0; i < 31; i++)
+            {
+                DateCurrencyModel dm = new DateCurrencyModel();
+                DateTime pomocniDate = date.AddDays(-i);
+                string pomocniDateString = pomocniDate.ToString("yyyy-MM-dd");
+                string curr = currencies.SelectToken(pomocniDateString).SelectToken(fromCurr + toCurr).ToString();
+                dm.currency = Decimal.Parse(curr);
+                dm.date = pomocniDateString;
+                result.Add(dm);
+            }
+            return Ok(result);
+        }
     }
 }
